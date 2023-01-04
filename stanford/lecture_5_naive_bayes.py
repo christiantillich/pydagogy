@@ -2,6 +2,15 @@
 """
 # Objective
 
+The goal here is to first introduce the difference between Generative and 
+Discriminative approaches to modeling. We do this primarily through the 
+framework of Gaussian Discriminant Analysis. Looking at this generative model
+opens up two avenues for discussion
+
+1. The comparison between GDA and Logistic serves to underscore several themes
+about assumptions and computation time that will recur later. 
+2. GDA serves as a useful platform for understanding Naive Bayes, since the 
+likelihood functions are so similar. 
 
 ### Gaussian Discriminant Analysis
 
