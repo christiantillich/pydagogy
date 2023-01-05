@@ -128,34 +128,25 @@ the realm of regularization on a Logistic framework.
 SVM can do this, though, and without a lot of parameterization. But we need to 
 start with some definitions: 
 
-**Optimal Margin Classifier (separable)**: Think about this as our decision
-boundary. A boundary that can linearly separate a set of data.  
+**Optimal Margin Classifier (separable)**: The decision boundary that sits the
+maximum possible distance away from the nearest point on both sides of the 
+boundary. 
 
 **Kernel**: A mapping between some base set of features, and some higher 
 dimensional feature space. This can even be a set of infinite features. 
 
-**Functional Margin**: Pretty much just accuracy.  
+**Functional Margin**: Think about this the band of space that fills out normal
+to the decision boundary. If the decision boundary is the line, the functional
+margin is the width of that line, and this is the thing we will be trying to 
+optimize. 
 
-**Geometric Margin**: Assuming linearly separable data, we could potentially have
-multiple decision boundaries that are equally valid. But the geometric margin is
-one that has the most space between the boundary and each observation.  
+**Geometric Margin**: The actual Euclidian distance to an observation as defined
+by the Functional Margin between that observation and the decision boundary. 
 
-Ultimately, SVMs are about maximizing this Geometric margin. Let's start with 
-the notation
+Ultimately, the goal of SVMs are about finding the Optimal Margin classifier. It 
+does so by trying to find the Geometric Margin that sits as far away from the 
+closest point on either side of the line as possible. 
 """
-#%% [python]
-@latexify.expression(use_math_symbols = True)
-def f(x):
-    return Labels is y in [-1,1]
-f
-#%% [python]
-@latexify.function(use_math_symbols = True)
-def g(z):
-    if z >= 0:
-        return 1
-    else:
-        return -1
-g
 
 #%% [markdown]
 """
@@ -166,10 +157,23 @@ We're going to frame our prediction function as
 def h(x):
     return g(w**T*x[i] + b)
 h
+#%% [python]
+@latexify.function(use_math_symbols = True)
+def g(z):
+    if z >= 0:
+        return 1
+    else:
+        return -1
+g
 #%% [markdown]
 """
-This framing isn't really any different then `Theta^T*X`, but I suspect it'll 
-be more convenient later. We define the functional margin of a hyperplane as
+This means that unlike logistic regression, we're not trying to find a
+probability. We're just outputting a classification directly. When 
+`w**T*x[i] + b > 0`, it gets labeled +1, otherwise -1. 
+
+Note that the way we frame the inner term isn't actually any different then
+`Theta^T*X`, but I suspect it'll be more convenient later. We define the
+functional margin of a hyperplane as
 """
 #%% [python]
 @latexify.expression(use_math_symbols = True)
@@ -178,26 +182,24 @@ def f(x):
 f
 #%% [markdown]
 """
-Right now, we're assuming that the training set is completely linearly separable. 
-We're going to relax this later, but stay with me. 
+Right now, we're assuming that the training set is completely linearly
+separable. We're going to relax this in lecture 7, but it's easier to see what's
+happening by starting with the easier case. 
 
 w,b are usually normalized, and if you don't do it, you can actually just cheat
-and scale w & b linearly to get larger/smaller numbers for `gamma` without actually
-moving the boundary. 
+and scale w & b linearly to get larger/smaller numbers for `gamma` without
+actually moving the boundary. 
 
-The geometric margin is defined as the euclidean distance between the boundary
-and an observation
+So we add the normalization to the functional margin to keep us from cheating in
+this way. 
 """
-#%% [python]
-@latexify.expression(use_math_symbols = True)
-def f(x):
-    return gamma[i] == y[i]*(w**T*x[i] + b) / abs(abs(w))
-f
-
 #%% [markdown]
 """
-Now we're going to deviate from our usaul patters a little bit. For the whole
-training set the geometric margin is actually
+Now, all of this functional margin talk deals with the relationship between
+the decision boundary and a single point, in theory. We make a small modification
+as we talk about the relationship between the decision boundary and a training
+set. Specifically, the functional margin with respect to a whole set of data is
+defined as
 """
 
 #%% [python]
@@ -208,18 +210,41 @@ f
 
 #%% [markdown]
 """
-So this is new. Rather than averaging over all points, our "error" here is kindof
-defined only relative to the worst point - the closest obs to the decision 
-boundary. But we now define our Optimal Margin Classifier as
+So, and I think Dr. Ng kindof glosses over this a bit, but what I'm gathering
+is that the Geometric Margin is actually the Euclidian distance to some observable
+value, and the Functional Margin is...  something else. Some arbitrary vector 
+pointing normal to the decision boundary in the direction of the closest obs?
+I'm not really sure. But he's pretty explicit that unlike with the Functional 
+Margin, the Geometric Margin gives us an actual distance. And the calculation 
+for that is proved in the lecture notes, but stated as
 """
+
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return argmax[w,b]*gamma
+    return Gamma[i] == y[i]*(w**T*x[i] + b) / abs(abs(w))
 f
 
 #%% [markdown]
 """
+And, much like with the Functional Margin, w.r.t. the training set, we look
+for the Geometric Margin to the closest point on either side of the decision 
+boundary. 
+
+Dr. Ng uses hats to denote the difference, where the hatted `gamma` is the 
+functional margin. Here I will use a capital Gamma, because I don't have hats. 
+But we now define our Optimal Margin Classifier as
+"""
+#%% [python]
+@latexify.expression(use_math_symbols = True)
+def f(x):
+    return argmax[w,b]*Gamma
+f
+
+#%% [markdown]
+"""
+Choose `(w,b)` to maximize the geometric margin. 
+
 We could do this two ways. The first is a constrained optimization where we
 try to pick a `Gamma` that's maximized so long as the Euclidean distance from 
 every single training observation is at least as big as `Gamma`
@@ -227,10 +252,13 @@ every single training observation is at least as big as `Gamma`
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return max[(gamma, w, b) | (y[i]*(w**T*x[i] + b) / abs(abs(w)) > Gamma)]*gamma
+    return max[[ {gamma, w, b} for gamma,w,b in (y[i]*(w**T*x[i] + b) / abs(abs(w)) > Gamma)]]*Gamma
 f
 #%% [markdown]
 """
+In other words, find the Geometric Margin so that each point in the training set
+lies at a distance at least the length of the Geometric Margin you chose. 
+
 So this is one way to maximize our worst-case geometric margin. But this is not
 convex, and it's really unweildy, so there's actually an equivalent expression 
 that's a bit better. 
@@ -238,17 +266,13 @@ that's a bit better.
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return min[(w,b) |(y[i](w**T*x[i] + b) >= 1)]*abs(abs(w))**2
+    return min[[ {w,b} for w,b in (y[i](w**T*x[i] + b) >= 1)]]*abs(abs(w))**2
 f
 #%% [markdown]
 """
-Sorry, still somewhat struggling with how to frame a conditional optimization 
-problem in only latexify. I may come back to this. 
-
-I feel like the notation here isn't super tight, either. But in general, I think
-I get the concept. We're looking for a decision boundary where even the closest
-point is a given `Gamma` distance away. And you can show that's equivalent to
-trying to choose `w` and `b` to minimize the norm of `w` while ensuring that 
-`y*yhat` is always positive (is always same-signed, or more explicitly, ensures
-that positively and negatively classed values are all on the correct side).
+Choose `(w,b)` to minimize the squared norm of `w` but where the functional
+margin for each training observation is at least 1. The proof of this is
+non-trivial, but this alternative expression _is_ convex and thus is much easier
+to solve. 
 """
+
