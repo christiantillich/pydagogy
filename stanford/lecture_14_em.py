@@ -218,7 +218,7 @@ and we can add a further convenience edit here that goes like
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return argmax[theta] * Sigma[i] * log(Sigma[z[i]] * Q[i](z[i]) * (P(x[i], z[i]|theta) / (Q[i]*z[i])))
+    return argmax[theta] * Sigma[i] * log(Sigma[z[i]] * Q(z[i]) * (P(x[i], z[i]|theta) / (Q(z[i]))))
 f
 #%% [markdown]
 """
@@ -228,7 +228,7 @@ move allows us to rephrase the whole problem as an expectation
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return argmax[theta] * Sigma[i] * log(E[z[i] in Q[i]]*((P(x[i], z[i]|theta) / (Q[i]*z[i]))))
+    return argmax[theta] * Sigma[i] * log(E[z[i] in Q]*((P(x[i], z[i]|theta) / (Q(z[i])))))
 f
 #%% [markdown]
 """
@@ -238,7 +238,7 @@ less than the value above:
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return argmax[theta] * Sigma[i] * E[z[i] in Q[i]](log((P(x[i], z[i]|theta) / (Q[i]*z[i]))))
+    return argmax[theta] * Sigma[i] * E[z[i] in Q](log((P(x[i], z[i]|theta) / (Q(z[i])))))
 f
 #%% [markdown]
 """
@@ -247,7 +247,7 @@ unpacking that, we get
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return argmax[theta] * Sigma[i] * Sigma[z[i]] * Q[i](z[i]) * (log((P(x[i], z[i]|theta) / (Q[i]*z[i]))))
+    return argmax[theta] * Sigma[i] * Sigma[z[i]] * Q(z[i]) * (log((P(x[i], z[i]|theta) / (Q(z[i])))))
 f
 #%% [markdown]
 """
@@ -268,7 +268,7 @@ In fact, if we take the inequality further, what we actually want is
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return Sigma[i] * E[z[i] in Q[i]](log((P(x[i], z[i]|theta) / (Q[i]*z[i])))) == Sigma[i] * log(E[z[i] in Q[i]]*((P(x[i], z[i]|theta) / (Q[i]*z[i]))))
+    return Sigma[i] * E[z[i] in Q](log((P(x[i], z[i]|theta) / (Q(z[i]))))) == Sigma[i] * log(E[z[i] in Q]*((P(x[i], z[i]|theta) / (Q(z[i])))))
 f
 
 #%% [markdown]
@@ -278,7 +278,7 @@ In order for that to happen,
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return (P(x[i], z[i]|theta) / (Q[i]*z[i])) == C
+    return (P(x[i], z[i]|theta) / (Q(z[i]))) == C
 f
 
 #%% [markdown]
@@ -290,7 +290,7 @@ to set it so that
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return (Q[i]*z[i]) == P(x[i], z[i]|theta) / (Sigma[z[i]] * P(x[i], z[i]|theta))
+    return (Q(z[i])) == P(x[i], z[i]|theta) / (Sigma[z[i]] * P(x[i], z[i]|theta))
 f
 
 #%% [markdown]
@@ -300,7 +300,7 @@ and now, there's a couple steps skipped here, but we can show that
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return (Q[i]*z[i]) == P(z[i] | x[i], theta)
+    return (Q(z[i])) == P(z[i] | x[i], theta)
 f
 
 #%% [markdown]
@@ -310,7 +310,7 @@ So, to summarise, in the E-step, we set
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(x):
-    return (Q[i]*z[i]) == P(z[i] | x[i], theta)
+    return (Q(z[i])) == P(z[i] | x[i], theta)
 f
 #%% [markdown]
 """
@@ -319,10 +319,48 @@ and then in the M-step, we construct our ugly function
 #%% [python]
 @latexify.expression(use_math_symbols = True)
 def f(theta):
-    return theta == argmax[theta] * Sigma[i] * Sigma[z[i]] * Q[i](z[i]) * (log((P(x[i], z[i]|theta) / (Q[i]*z[i]))))
+    return theta == argmax[theta] * Sigma[i] * Sigma[z[i]] * Q(z[i]) * (log((P(x[i], z[i]|theta) / (Q(z[i])))))
 f
 
 #%% [markdown]
 """
-and update theta. 
+and update theta. Now, the way this works in practice for Gaussian Mixtures 
+specifically is that in our E-step, we set
+"""
+#%% [python]
+@latexify.expression(use_math_symbols = True)
+def f(x):
+    return w[i,j] == Q(z[i] == j) == P(z[i] == j | x[i], phi, mu, sigma)
+f
+
+#%% [markdown]
+"""
+And our M-step becomes
+"""
+
+#%% [python]
+@latexify.expression(use_math_symbols = True)
+def f(x):
+    return argmax[mu,sigma,phi] * Sigma[i]*Sigma[j] * w[i,j] * log((1/((2*pi)**(1/2)*abs(sigma[i])**(1/2))) * e**(-(1/2)*(x[i]-mu[j])*sigma[i]**(-1)*x([i]-mu[j]))*phi[j]) / w[i,j]
+f
+
+#%% [markdown]
+"""
+It's ugly, but the solution to the argmax is just what we had from above
+"""
+
+#%% [python]
+@latexify.expression(use_math_symbols = True)
+def f(x):
+    return mu[j] == Sigma[i]*int(z[i] == j)*x[i] / (Sigma[i]*int(z[i] == j))
+f
+#%% [python]
+@latexify.expression(use_math_symbols = True)
+def f(x):
+    return phi[j] == 1/m * Sigma[i]*int(z[i] == j)
+f
+
+#%% [markdown]
+"""
+And I think he's just leaving the derivation of sigma for the homework. 
 """
