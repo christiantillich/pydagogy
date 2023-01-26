@@ -290,5 +290,8 @@ common modification is
 > "Take actions w.r.t. $\pi$" 
 turns into 
 > "90% of the time we do $\pi$, 10% of the time we choose totally randomly".
-This is called "$\epsilon$-greedy exploration". 
+This is called "$\epsilon$-greedy exploration". There's a number of algorithms
+here, "Boseman exploration" is another we talk about for a bit. There's also
+a line of research for "intrinsic motivation RL", where you reward an RL algorithm
+for finding something it hasn't found before. 
 """
