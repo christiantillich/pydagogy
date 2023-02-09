@@ -181,4 +181,50 @@ and AWS moves objects between access tiers _for you_. This removes retrieval
 charges. It _mostly_ seems comparable to GP access in terms of features, but
 instead of pricing by amount of data retrieved, you're priced per month by the
 number of objects monitored. 
+
+We go into a hands-on lab changing the storage classes of a .jpg object through
+the AWS console. For reference, I saved it at
+"""
+#%% [python]
+fs.ls('nmr-sandbox/ctillich/storage-classes-demos')   
+
+#%% [markdown]
+"""
+And we _should_ be able to see and even manipulate the storage class using `s3fs`, 
+but in practice it doesn't seem to work. 
+"""
+#%% [python]
+fs.getxattr('nmr-sandbox/ctillich/storage-classes-demos/coffee.jpg', 'x-amz-storage-class') 
+
+#%% [markdown]
+"""
+Boto might also have something here, but I'm honestly probably not going to 
+be manipulating this in python all that often. 
+
+### Lifecycle Rules 
+
+Lifecycle Rules are ways of handling the storage class of objects automatically. 
+In the AWS console, this is under the "Management" tab of any selected bucket. 
+You can essentially set `if/then` statements based on object creation or the
+object version change date. You can set lifestyle rules for a whole bucket, or
+a specific path too. 
+
+S3 versioning also allows it so that deleted objects are just a new "version"
+tagged for "delete". Enabling versioning also allows us to set lifecycle rules
+based on this status, so if the business problem is 
+
+> I want users to be able to recover deleted objects immediately up to 30 days 
+> after deletion, and within 48 hours therafter
+
+The solution is to set lifecycle rules on all non-current versions of the object.
+The most cost-effective approach is to set non-current versions to Standard IA, 
+since we expect to have to recover deleted objects rarely, and then after 30
+days transition non-current versions to Glacier Deep Archive. 
+
+AWS also has a report called "Storage Class Analysis" for objects stored as 
+Standard or Standard IA. You can use this report to see objects, their current
+class, and their ages. It's what you want if you're trying to create or modify
+lifecycle rules as a cost-saving measure. 
+
+
 """
