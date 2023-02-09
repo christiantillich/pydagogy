@@ -75,6 +75,9 @@ then hit it with the NN-du-jour.
 
 1. What is the role of the Skip-Gram model here? We're using it to map from 
 words in a document to either the label or the class-related key-words?
+
+SGM learns the representation. They project it into a spherical space. 
+
 1. How do we use the SGM to get to the vMD?
 
 """
