@@ -2,6 +2,9 @@
 """
 # Objective
 
+Outline the course, provide the location to course materials, and give some 
+pointers on working with Udemy in general. 
+
 ### Notes on Udemy
 
 Some useful features to remember:
