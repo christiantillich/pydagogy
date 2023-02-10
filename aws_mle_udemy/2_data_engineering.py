@@ -198,33 +198,87 @@ fs.getxattr('nmr-sandbox/ctillich/storage-classes-demos/coffee.jpg', 'x-amz-stor
 
 #%% [markdown]
 """
-Boto might also have something here, but I'm honestly probably not going to 
-be manipulating this in python all that often. 
+Boto might also have something here, but I'm honestly probably not going to be
+manipulating this in python all that often. 
 
 ### Lifecycle Rules 
 
-Lifecycle Rules are ways of handling the storage class of objects automatically. 
-In the AWS console, this is under the "Management" tab of any selected bucket. 
+Lifecycle Rules are ways of handling the storage class of objects automatically.
+In the AWS console, this is under the "Management" tab of any selected bucket.
 You can essentially set `if/then` statements based on object creation or the
-object version change date. You can set lifestyle rules for a whole bucket, or
-a specific path too. 
+object version change date. You can set lifestyle rules for a whole bucket, or a
+specific path too. 
 
 S3 versioning also allows it so that deleted objects are just a new "version"
 tagged for "delete". Enabling versioning also allows us to set lifecycle rules
 based on this status, so if the business problem is 
 
-> I want users to be able to recover deleted objects immediately up to 30 days 
-> after deletion, and within 48 hours therafter
+> I want users to be able to recover deleted objects immediately up to 30 days >
+after deletion, and within 48 hours therafter
 
-The solution is to set lifecycle rules on all non-current versions of the object.
-The most cost-effective approach is to set non-current versions to Standard IA, 
-since we expect to have to recover deleted objects rarely, and then after 30
-days transition non-current versions to Glacier Deep Archive. 
+The solution is to set lifecycle rules on all non-current versions of the
+object. The most cost-effective approach is to set non-current versions to
+Standard IA, since we expect to have to recover deleted objects rarely, and then
+after 30 days transition non-current versions to Glacier Deep Archive. 
 
-AWS also has a report called "Storage Class Analysis" for objects stored as 
+AWS also has a report called "Storage Class Analysis" for objects stored as
 Standard or Standard IA. You can use this report to see objects, their current
 class, and their ages. It's what you want if you're trying to create or modify
 lifecycle rules as a cost-saving measure. 
 
+There was a lab, I didn't follow along, because I don't own the buckets I'm
+using. But Stephane sets up lifecycle rules for the bucket, transitioning to 4
+different storage classes at 30, 60, 90, and 180 days. All fairly
+straightforward to do off the Management tab. 
+
+### Security
+
+There are four methods of encryption supported
+
+1. SSE-S3 - AWS handles it all. 
+2. SSE-KMS - Use AWS Key Management Service to manage encryption keys. 
+    1. Gives us a way to gatekeep users through KMS access
+    1. Gives us an audit trail for key usage. 
+3. SSE-C - I manage the encryption keys internally. 
+4. Client Side Encryption - I send data to some 3rd party for encryption before
+   sending to AWS
+
+We're probably mostly going to use S3 and KMS. The others are probably for more
+sensitive data than anything I'm doing. 
+
+In addition, we can set S3 access permissions in two ways. 
+
+1. User based control - through IAM
+1. bucket/object based control
+    1. Bucket policies
+    1. Object Access Control Lists
+    1. Bucket Access Control Lists
+
+Bucket policies are json documents. The docks specify which resources are
+controlled, which API actions are allowed by setting "Allow" or "Deny", and
+which accounts the policy should apply to. 
+
+So we could use a bucket policy to grant public access, force encryption on
+upload, and grant access to other accounts, for instance. 
+
+This is all probably a bit in the weeds, but mostly it looks like I can set
+encryption through the S3 portal by clicking on objects and going to the
+"Properties" tab. We can do this similarly as a policy by viewing the properties
+of the bucket, but only for new objects uploaded. 
+
+Other things to know:
+
+* You can set a VPC Endpoint Gateway, which means that instead of making
+  requests for bjects over the wide internet, you can first log into a virtual
+  private cloud and handle all S3 requests from there. I suspect this is how
+  things are done in most businesses. 
+* S3 has access logs, and you can store them in other s3 buckets. All API calls
+  can be tracked via AWS CloudTrail. 
+* You can also add tags to objects, and make policies for anything with a
+  specific tag, e.g. marking documents "Classified". 
+
+### Kinesis Data Streams
+
+This is a data streaming service. 
 
 """
