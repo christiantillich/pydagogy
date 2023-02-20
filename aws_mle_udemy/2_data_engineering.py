@@ -279,6 +279,79 @@ Other things to know:
 
 ### Kinesis Data Streams
 
-This is a data streaming service. 
+This is a data streaming service. The competitor would be something like 
+Apache Kafka. If you see the phrase "real-time" on the test, it's probably a
+Kinesis question. 
 
+There are 4 different subofferings here. 
+
+1. Kinesis streams - for low-latency streaming
+1. Kinesis Analytics - for real-time analytics using SQL
+1. Kinesis Firehose - more of a tool for getting data into a DB
+1. Kinesis Video - for real-time video streaming. 
+
+The basic use-case is roughly 
+
+```
+[Click Streams, IoT, Logs] > Kinesis Streams > Kinesis Analytics > DB
+```
+
+#### Kinesis Streams
+
+Durability and availability here work a little bit differently. Data is retained
+only for 24 hours. This gives you some ample time to replay a process if things
+go wrong. But the AZ number is 3 and records can't be deleted. So for the access
+window, data durability is still pretty high. Record size up to 1 MB. 
+
+Streams again subdivides into two modes. 
+
+> ** Provisioned Mode **: You choose the number of shards to provision. Each
+> shard gets 1 MB/s in and 2 MB/s out. Price is per shard provisioned per hour. 
+> ** On-demand Mode **: No need to provision shards, they are scaled automatically
+> based on observed throughput peak during a 30 day window. Here you pay per
+> stream per hour and per GB in/out. 
+
+In addition, there are some following additional limits. 
+
+* 1 MB/s per shard on input. If you go over this, you get 
+  "ProvisionedThroughputException" errors. 
+* 2 MB/s per shard on output _across all consumers_. 
+* 5 API calls per second per shard _across all consumers_. 
+* Data is retained for 24 hours by default. This can be extended up to 365 days. 
+
+I'm still not totally clear what a "shard" does for me in this context. It's 
+something I would probably need more familiarity with or to look at secondary
+sources for. 
+
+#### Kinesis Firehose
+
+Kinesis is optimized mostly for throughput. It collects records from a wide 
+variety of producers and dumps it into a DB typically, or perhaps some other 
+http endpoint. Some light transformation work is possible via Lambda functions, 
+but not as much as other streaming offerings. And it is possible to backup all
+records, or even just failed records, by writing the raw input out to S3 as well.
+
+Kinesis Firehose is fully managed, so it doesn't take any administrators on our
+end to set up servers. It's not completely real-time, either. There's usually 
+~1 min latency between input and output at the minimum. In fact, the recommended
+is ~5 min. You pay based on the total throughput. 
+
+The consumer side is a bit limited - data can only be deposited into Reshift,
+S3, ElasticSearch, or Splunk DBs. It supports many data formats, though, along
+with compression if the output is written to S3. And there aren't any
+subdivisions based on partitioning here, the scaling is fully automatic. 
+
+#### Comparisons
+
+So which one do we want for what projects? Streams is more optimized for 
+applications and use. The draw is the lower latency and customizeable data 
+storage that allows for replaying streams and sending output to multiple 
+consumers. 
+
+Firehose, by contrast, is more of an ingestion tool. There's more latency, and
+fewer accepted consumers of the process, all of which are databases. There's also
+no storage/replay option for Firehose, unless you also write out raw inputs to
+some other DB for security. 
+
+#### Kinesis Analytics
 """
