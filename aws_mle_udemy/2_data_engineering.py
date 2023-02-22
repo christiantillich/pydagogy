@@ -277,7 +277,7 @@ Other things to know:
 * You can also add tags to objects, and make policies for anything with a
   specific tag, e.g. marking documents "Classified". 
 
-### Kinesis Data Streams
+### Kinesis
 
 This is a data streaming service. The competitor would be something like 
 Apache Kafka. If you see the phrase "real-time" on the test, it's probably a
@@ -296,7 +296,7 @@ The basic use-case is roughly
 [Click Streams, IoT, Logs] > Kinesis Streams > Kinesis Analytics > DB
 ```
 
-#### Kinesis Streams
+#### Kinesis Data Streams
 
 Durability and availability here work a little bit differently. Data is retained
 only for 24 hours. This gives you some ample time to replay a process if things
@@ -354,4 +354,69 @@ no storage/replay option for Firehose, unless you also write out raw inputs to
 some other DB for security. 
 
 #### Kinesis Analytics
+
+Can sit on the output of _either_ Data Streams or Firehose. Lets us query the 
+input streams as if they are database tables, and allows us to pull in reference
+tables from S3 as well if we need. It's actually fuller-featured than even just
+an analytics tool, though, as it also enables streaming ETL. 
+
+It's an expensive tool, though, and you pay per resources consumed. But it does
+scale automatically, support SQL and Flink to define the computation, and allow
+lambda functions for pre-processing. 
+
+The teacher shows an image of [Random Cut
+Forest](https://assets.amazon.science/d2/71/046d0f3041bda0188021395b8f48/robust-random-cut-forest-based-anomaly-detection-on-streams.pdf), 
+which I've honestly never heard of but seems to be an anomaly detection algo 
+specifically designed to identify outliers in univariate time signals. But the 
+neat thing is that this can apparently been done through Kinesis Analytics on
+live streams. So it's good to know that the methods we can apply here are fairly
+robust. 
+
+In the demo, Kinesis has a bunch of SQL templates for different analytics 
+offerings, and the teacher simply picks the anomaly detection template from
+those offerings. The SQL dialect is... different. There are statements like 
+`CREATE OR REPLACE PUMP...`. 
+
+#### Kinesis Video
+
+Just a special stream service for video. The producers are typically some type
+of IoT camera device, smartphone, etc. And this is piped into KVS. The restriction
+here is one producer per stream. And many processes can stand in as a consumer
+of video - sagemaker, ec2, Amazon's Rekognition Video service, etc. 
+
+Data can be stored from up to 1 hour to 10 years. 
+
+The teacher walks through an example architecture. Let's say you're building 
+a bodycam system to watch the cops. The bodycams pipe the feed into the KVS. 
+A [Fargate](https://aws.amazon.com/fargate/) serverless instance is set up to
+consume the feed data and do the following:
+
+1. Pipe checkpoints into a DB so if anything goes down, we know where to start again. 
+1. Send decoded frames to an ML tool that's designed to identify use of force. 
+1. Pipe `use_of_force = True/False` into a KDS with badge number, location, etc.
+1. AWS lambda function to consume KDS feed and send out notifications when 
+   use of force is detected. 
+
+### Glue
+
+Glue is a tool that helps build and store a repository for metadata for all
+your tables. It offers automated schema inferencing, schema versioning, and 
+the use of crawlers, which will presumably sit on your DB looking for changes
+and integrate the data back into the catalog. 
+
+Crawlers are pointed at some database (S3, Redshift, RDS) and go through the
+raw files (JSON, Parquet, CSV, RS) to infer schemas and partitions. They can
+be scheduled or run on demand, and they can be outfitted with certain credentials.
+
+The thing to pay attention to is how your partitions are stored in S3. The success
+of Glue really turns on this. It is effectively going to turn these partitions
+into your schema/table/column info, so to get your metadata output the way you
+want it, it must be stored in a specific way. But the appeal here is setting 
+up a store of raw files and getting out what you need to create a database in
+a bush-button kind of way. 
+
+Glue also has an ETL offering. It runs serverless, can be scheduled or set to
+triggered on events, and is fully managed and fairly cheap. The transformation
+offerings seem fairly basic - dropping fields, filters, joins, and maps. There's
+also an ML-based offering to remove duplicate records. 
 """
