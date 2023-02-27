@@ -1,4 +1,4 @@
-#%% [markdown]
+¢#%% [markdown]
 """
 # Objective
 
@@ -279,9 +279,9 @@ Other things to know:
 
 ### Kinesis
 
-This is a data streaming service. The competitor would be something like 
-Apache Kafka. If you see the phrase "real-time" on the test, it's probably a
-Kinesis question. 
+This is a data streaming service. The competitor would be something like Apache
+Kafka. If you see the phrase "real-time" on the test, it's probably a Kinesis
+question. 
 
 There are 4 different subofferings here. 
 
@@ -292,9 +292,7 @@ There are 4 different subofferings here.
 
 The basic use-case is roughly 
 
-```
-[Click Streams, IoT, Logs] > Kinesis Streams > Kinesis Analytics > DB
-```
+``` [Click Streams, IoT, Logs] > Kinesis Streams > Kinesis Analytics > DB ```
 
 #### Kinesis Data Streams
 
@@ -305,36 +303,37 @@ window, data durability is still pretty high. Record size up to 1 MB.
 
 Streams again subdivides into two modes. 
 
-> ** Provisioned Mode **: You choose the number of shards to provision. Each
-> shard gets 1 MB/s in and 2 MB/s out. Price is per shard provisioned per hour. 
-> ** On-demand Mode **: No need to provision shards, they are scaled automatically
-> based on observed throughput peak during a 30 day window. Here you pay per
-> stream per hour and per GB in/out. 
+> ** Provisioned Mode **: You choose the number of shards to provision. Each >
+shard gets 1 MB/s in and 2 MB/s out. Price is per shard provisioned per hour. >
+** On-demand Mode **: No need to provision shards, they are scaled automatically
+> based on observed throughput peak during a 30 day window. Here you pay per >
+stream per hour and per GB in/out. 
 
 In addition, there are some following additional limits. 
 
-* 1 MB/s per shard on input. If you go over this, you get 
+* 1 MB/s per shard on input. If you go over this, you get
   "ProvisionedThroughputException" errors. 
 * 2 MB/s per shard on output _across all consumers_. 
 * 5 API calls per second per shard _across all consumers_. 
 * Data is retained for 24 hours by default. This can be extended up to 365 days. 
 
-I'm still not totally clear what a "shard" does for me in this context. It's 
+I'm still not totally clear what a "shard" does for me in this context. It's
 something I would probably need more familiarity with or to look at secondary
 sources for. 
 
 #### Kinesis Firehose
 
-Kinesis is optimized mostly for throughput. It collects records from a wide 
-variety of producers and dumps it into a DB typically, or perhaps some other 
-http endpoint. Some light transformation work is possible via Lambda functions, 
+Kinesis is optimized mostly for throughput. It collects records from a wide
+variety of producers and dumps it into a DB typically, or perhaps some other
+http endpoint. Some light transformation work is possible via Lambda functions,
 but not as much as other streaming offerings. And it is possible to backup all
-records, or even just failed records, by writing the raw input out to S3 as well.
+records, or even just failed records, by writing the raw input out to S3 as
+well.
 
 Kinesis Firehose is fully managed, so it doesn't take any administrators on our
-end to set up servers. It's not completely real-time, either. There's usually 
-~1 min latency between input and output at the minimum. In fact, the recommended
-is ~5 min. You pay based on the total throughput. 
+end to set up servers. It's not completely real-time, either. There's usually ~1
+min latency between input and output at the minimum. In fact, the recommended is
+~5 min. You pay based on the total throughput. 
 
 The consumer side is a bit limited - data can only be deposited into Reshift,
 S3, ElasticSearch, or Splunk DBs. It supports many data formats, though, along
@@ -343,19 +342,19 @@ subdivisions based on partitioning here, the scaling is fully automatic.
 
 #### Comparisons
 
-So which one do we want for what projects? Streams is more optimized for 
-applications and use. The draw is the lower latency and customizeable data 
-storage that allows for replaying streams and sending output to multiple 
+So which one do we want for what projects? Streams is more optimized for
+applications and use. The draw is the lower latency and customizeable data
+storage that allows for replaying streams and sending output to multiple
 consumers. 
 
 Firehose, by contrast, is more of an ingestion tool. There's more latency, and
-fewer accepted consumers of the process, all of which are databases. There's also
-no storage/replay option for Firehose, unless you also write out raw inputs to
-some other DB for security. 
+fewer accepted consumers of the process, all of which are databases. There's
+also no storage/replay option for Firehose, unless you also write out raw inputs
+to some other DB for security. 
 
 #### Kinesis Analytics
 
-Can sit on the output of _either_ Data Streams or Firehose. Lets us query the 
+Can sit on the output of _either_ Data Streams or Firehose. Lets us query the
 input streams as if they are database tables, and allows us to pull in reference
 tables from S3 as well if we need. It's actually fuller-featured than even just
 an analytics tool, though, as it also enables streaming ETL. 
@@ -365,58 +364,124 @@ scale automatically, support SQL and Flink to define the computation, and allow
 lambda functions for pre-processing. 
 
 The teacher shows an image of [Random Cut
-Forest](https://assets.amazon.science/d2/71/046d0f3041bda0188021395b8f48/robust-random-cut-forest-based-anomaly-detection-on-streams.pdf), 
-which I've honestly never heard of but seems to be an anomaly detection algo 
-specifically designed to identify outliers in univariate time signals. But the 
+Forest](https://assets.amazon.science/d2/71/046d0f3041bda0188021395b8f48/robust-random-cut-forest-based-anomaly-detection-on-streams.pdf),
+which I've honestly never heard of but seems to be an anomaly detection algo
+specifically designed to identify outliers in univariate time signals. But the
 neat thing is that this can apparently been done through Kinesis Analytics on
 live streams. So it's good to know that the methods we can apply here are fairly
 robust. 
 
-In the demo, Kinesis has a bunch of SQL templates for different analytics 
+In the demo, Kinesis has a bunch of SQL templates for different analytics
 offerings, and the teacher simply picks the anomaly detection template from
-those offerings. The SQL dialect is... different. There are statements like 
+those offerings. The SQL dialect is... different. There are statements like
 `CREATE OR REPLACE PUMP...`. 
 
 #### Kinesis Video
 
 Just a special stream service for video. The producers are typically some type
-of IoT camera device, smartphone, etc. And this is piped into KVS. The restriction
-here is one producer per stream. And many processes can stand in as a consumer
-of video - sagemaker, ec2, Amazon's Rekognition Video service, etc. 
+of IoT camera device, smartphone, etc. And this is piped into KVS. The
+restriction here is one producer per stream. And many processes can stand in as
+a consumer of video - sagemaker, ec2, Amazon's Rekognition Video service, etc. 
 
 Data can be stored from up to 1 hour to 10 years. 
 
-The teacher walks through an example architecture. Let's say you're building 
-a bodycam system to watch the cops. The bodycams pipe the feed into the KVS. 
-A [Fargate](https://aws.amazon.com/fargate/) serverless instance is set up to
+The teacher walks through an example architecture. Let's say you're building a
+bodycam system to watch the cops. The bodycams pipe the feed into the KVS. A
+[Fargate](https://aws.amazon.com/fargate/) serverless instance is set up to
 consume the feed data and do the following:
 
-1. Pipe checkpoints into a DB so if anything goes down, we know where to start again. 
+1. Pipe checkpoints into a DB so if anything goes down, we know where to start
+   again. 
 1. Send decoded frames to an ML tool that's designed to identify use of force. 
 1. Pipe `use_of_force = True/False` into a KDS with badge number, location, etc.
-1. AWS lambda function to consume KDS feed and send out notifications when 
-   use of force is detected. 
+1. AWS lambda function to consume KDS feed and send out notifications when use
+   of force is detected. 
 
 ### Glue
 
-Glue is a tool that helps build and store a repository for metadata for all
-your tables. It offers automated schema inferencing, schema versioning, and 
-the use of crawlers, which will presumably sit on your DB looking for changes
-and integrate the data back into the catalog. 
+Glue is a tool that helps build and store a repository for metadata for all your
+tables. It offers automated schema inferencing, schema versioning, and the use
+of crawlers, which will presumably sit on your DB looking for changes and
+integrate the data back into the catalog. 
 
-Crawlers are pointed at some database (S3, Redshift, RDS) and go through the
-raw files (JSON, Parquet, CSV, RS) to infer schemas and partitions. They can
-be scheduled or run on demand, and they can be outfitted with certain credentials.
+Crawlers are pointed at some database (S3, Redshift, RDS) and go through the raw
+files (JSON, Parquet, CSV, RS) to infer schemas and partitions. They can be
+scheduled or run on demand, and they can be outfitted with certain credentials.
 
-The thing to pay attention to is how your partitions are stored in S3. The success
-of Glue really turns on this. It is effectively going to turn these partitions
-into your schema/table/column info, so to get your metadata output the way you
-want it, it must be stored in a specific way. But the appeal here is setting 
-up a store of raw files and getting out what you need to create a database in
-a bush-button kind of way. 
+The thing to pay attention to is how your partitions are stored in S3. The
+success of Glue really turns on this. It is effectively going to turn these
+partitions into your schema/table/column info, so to get your metadata output
+the way you want it, it must be stored in a specific way. But the appeal here is
+setting up a store of raw files and getting out what you need to create a
+database in a bush-button kind of way. 
 
 Glue also has an ETL offering. It runs serverless, can be scheduled or set to
 triggered on events, and is fully managed and fairly cheap. The transformation
 offerings seem fairly basic - dropping fields, filters, joins, and maps. There's
 also an ML-based offering to remove duplicate records. 
+
+Glue is a DB Admin tool ultimately. And maybe a Mermaid project here to group
+the various AWS offerings by their place in the DS project lifecycle here might
+be a good exercise. 
+
+### Athena
+
+Athena appears to be a rough-and-ready DB/querying tool that lets you query data
+directly from flat S3 files. It provides a querying tool that sits directly in
+browser. You write a query and it writes out the results also to an S3 bucket. 
+
+### Cleanup
+
+To clean up everything Stephane just did, you delete the crawlers, you delete
+everything in S3, you delete the delivery streams and Analytics objects, and you
+delete the IAM roles. Any of our Athena work does not require the deletion of
+any objects (other than the output files in S3), and our Kinesis streams could
+in theory sit there because they don't cost money unless they're running. 
+
+### AWS Data Stores
+
+There's a couple offerings here - Redshift, RDS/Aurora, DynamoDB (NoSQL), S3,
+OpenSearch, and ElastiCache. 
+
+1. Redshift
+    1. Heavy-hitter offering. Mostly for Data Warehousing and OLAP (online
+       analytical processing)
+    1. Data must be in S3 to start. And you typically load the S3 data into
+       Redshift. However, you can use Redshift Spectrum as a tool that sits in
+       between S3 and Redshift to dynamically query the data _from_ S3 and skip
+       the loading. 
+    1. Must be provisioned in advance. 
+    1. Column-based storage. This makes it optimized to do heavy analytics on 
+       large amounts of data in the cloud. 
+1. RDS/Aurora
+    1. This is the optimized-for-transactions offering (OLTP). Data is stored
+       row-based. This makes it optimized to handle single transactions. 
+    1. Must be provisioned in advance. 
+1. DynamoDB
+    1. NoSQL offering. 
+    1. It's serverless, meaning no provisioning. You just need to specify the
+       read/write capacity in advance. 
+    1. Great for storing ML model output. 
+1. S3 
+    1. Serverless object storage. 
+    1. Very much the backbone of anything AWS. 
+1. OpenSearch (ElasticSearch)
+    1. Great for indexing data and searching for observations. 
+    1. Mostly used for clickstream analytics. 
+1. ElastiCache
+    1. Not really an ML thing. Mostly for data that has to be accessed real 
+       fast for some online application. 
+
+### AWS Data Pipelines
+
+A different ETL offering. Usually writes out to S3, RDS, Dynamo, Redshift, or
+EMR. It's a task orchestrator, think Airflow. The computation doesn't actually 
+happen on the server running DP, it's merely calling out to the services that
+would do the computation. But this is how we typically manage task dependencies. 
+Has some retry and failure notification processes. Data Sources can be on or
+off premise. High availability with failover processes. 
+
+
+
+
 """
