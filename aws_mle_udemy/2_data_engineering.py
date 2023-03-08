@@ -476,10 +476,70 @@ OpenSearch, and ElastiCache.
 
 A different ETL offering. Usually writes out to S3, RDS, Dynamo, Redshift, or
 EMR. It's a task orchestrator, think Airflow. The computation doesn't actually 
-happen on the server running DP, it's merely calling out to the services that
+happen on the server running DP, it's merely calling out to an EC2 instance that
 would do the computation. But this is how we typically manage task dependencies. 
 Has some retry and failure notification processes. Data Sources can be on or
 off premise. High availability with failover processes. 
+
+So we could imagine some data sitting in RDS that needs to be moved into S3 to
+be consumed by Sagemaker. In previous and current roles, I would simply have some
+DB toolset in python or R that would run the query I need, and write out to S3. 
+But if I wanted to do this in a purely-cloud-centric way, I could create a data
+pipeline and ??feed it the same query??. Need to clarify that.
+
+At any rate, I could use DP to manage the whole process, especially if the 
+transformations were really intense and prone to failure. 
+
+What's the difference between DP and Glue though? Glue actually runs code that 
+you feeed it (Python, Scala, or Spark). However, you don't worry about the 
+resources used - AWS takes care of all of that. DP, on the other hand, is more
+about letting you control the resources provisioned. You don't feed it code, but
+more tell it to spin up an EC2 instance that will run some github repo
+
+### AWS Batch
+
+Runs batch jobs off docker images. You don't actually provision the instances, 
+this is totally services. You do, however, pay for what is provisioned. 
+
+Like Glue, it's going to take care of all the resources for you. Unlike Glue, 
+you specify the running environment via a docker container. In general, you're
+using Glue for ETL, and you're using Batch for compute-intensive work that is 
+_not_ ETL related. I'm not sure what that would actually entail in a cloud 
+environment, Stephane points to running processes to "clean up" data sitting 
+in an S3 bucket, but that still feels vaguely ETL-ish to me. 
+
+### Database Migration Service
+
+For, shockingly, database migration. We can think about DB migrations as
+homogenous (Oracle on premise to Oracle in AWS) as well as Heterogenous (MS SQL
+Server to Aurora), and there's support for both. 
+
+The flow is a `Old DB > EC2 Running EMS > New DB`. There's no data transformation
+here, so if you need some ETL work done you have to do it after the migration. 
+But once the DB is in the cloud, you could use Glue to do the transforms. 
+
+### AWS Step Functions
+
+We use these to design workflows. They give us visualization of all the different
+services that are being orchestrated, and offer more advanced error handling and
+retry mechanisms then any single service as a standalone offering. 
+
+Stephane shows an SF for an XGB model training job. It's all written in JSON, 
+and defines at a very high level a process flow that goes 
+
+``` Generate Data > Train > Save Model > Batch Transform to Score ```
+
+It looks vaguely Airflow-ish, and the visualizations that are compiled off of 
+the JSON are very nice. 
+
+### Additional Topics
+
+* AWS DataSync - System optimized to move on-prem storage to AWS. It works by 
+employing a DataSync Agent, which is a virtual machine that sits on-prem and
+connects to the storage. The agent then handles all the encryption and data 
+validation. 
+* MQTT - just a standard messaging protocol that handles IoT data. 
+
 
 
 
