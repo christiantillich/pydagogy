@@ -30,7 +30,7 @@ patient info - e.g. age, shape of mass, density of mass, etc.
     of an exact value, so we do everything off ranges e.g. $P(x > 2 \sigma)$ 
 1. Binomial Approximation of Normal
 1. Poisson - for count data where every obs has the same avg. value. 
-1. 
+1. Bernoulli - for binary. 
 
 There's something kindof weird here going on for the test. The teacher doesn't
 really cover why you would use them, just really emphasizes that if they're
@@ -55,8 +55,122 @@ Athena appears to position itself as a very low-barrier-to-entry DB system. It's
 not Redshift, it's not RDS, it's something to query raw files that are just 
 dumped into S3. 
 
+# Quicksight
 
+This is your visualization/dashboarding offering. Lets you build visualizations, 
+perform ad-hoc analysis, etc. Can even be done over mobile. Also totally serverless. 
 
+Quicksight works with Redshift, Aurora, RDS, Athena, or any EC2-hosted DB. 
 
+Quicksight works off a platform called SPICE (Super-fast, Parallel, In-memory
+Calculation Engine). It'll store the data columnar in-memory, and will take
+advantage of this to enable as much parallelization as possible. Each user gets
+10GB of storage. 
 
+Main uses are data exploration and the creation of dashboards. There's a couple
+new offerings that have an ML-centric focus. The first is anomaly detection, using
+AWS' Random-Cut Forest algo. I should play around with this and see if there's
+an open source package for this kind of thing. There's also some out-of-box
+forecasting offerings, similar to Prophet. And finally, there's a feature called
+"Auto-Narratives", which is some kind of AI-driven way of placing dashboards into
+a larger script like you might see in a pitch or presentation? I'm a little 
+fuzzy on the offerings here. This is it, though, and the teacher makes a point to
+say that if there's a question about ML offerings outside of these three, it
+must belong to some other product. 
+
+That's a lie - there's actually one more offering. Quicksight Q tries to answer
+business questions with NLP. Natural language prompts are input, pretty charts
+and graphs that answer the question (allegedly) are output. It's a product that
+requires some serious training, as Q has to be told where to find the data that
+it's going to be compiling, as well as how it's all supposed to be formatted. 
+
+What do we _not_ use QuickSight for? There's a controversial opinion on whether
+the test might expect us to know about paginated reports. They were released
+Nov. 2022. It _used_ to be the case that QuickSight was more about
+rough-and-ready dashboards, and less about managerial quality paginated reports,
+but since Nov, this is no longer the case. However, the test may still not
+account for this yet. So it's a sticky question. I'd probably err on the side
+of the test being up to date, though. 
+
+We also don't use quicksight for ETL, that's more Glue's function, even though
+Quicksight does have some limited transformative capability. 
+
+Security: QS supports MFA, VPC connectivity, and row/column security. You also 
+get charged per user, so there's some user management defined using IAM.
+
+They actually charge for a lot more, very nickle-and-dimey, pay more for Q, pay
+more for extra SPICE, pay more for paginated reports, anomaly detection, readers, 
+etc. 
+
+### Visualization Types
+
+There's going to be several questions on "given this data, how should we present
+it?" So buckle up. 
+
+AutoGraph will do the visualization stuff automatically, though it's more error
+prone. Other visual offerings include:  
+* Bar
+* Line Graphs
+* Scatter Plots
+* Heat Maps
+* Pie Graphs
+* Tree Maps
+* Pivot Tables
+* Geospacial
+* Donut Charts
+* Gauge Charts
+* Word Clouds 
+
+We know what these all do, so I'm not gonna spend much time on it. The only 
+thing to call out is that "Tree Maps" might be considered to be a good way of 
+displaying hierarchical information. I would _profoundly disagree_, but play to
+the audience. 
+
+# Elastic Map Reduce
+
+This is a managed Hadoop framework, offered up and often including Spark, HBase,
+Presto, Flink, Hive, and some other frameworks that might also sit on top of
+Hadoop and provide additional functionality. This is for absolutely massive data
+sets, where you need a whole cluster of computers to evaluate or process. 
+
+EMR clusters are typically composed of Master Nodes, Core Nodes, and Task Nodes. 
+A Master Node's job is to control the cluster and orchestrate, it's a single 
+EC2 Instance responsible for all the rest. Core Nodes host data. They can be
+scaled up or down, but you risk losing data when you do. The task notes are just
+there to run tasks, and don't actually host the data, so these are the most
+scalable of the nodes. Thus, they make the best fit for when you need spot
+instances. 
+
+Generally, we have two use cases in mind when spinning up a cluster. Transient
+clusters have an expiration date, usually after some set number of tasks have 
+been achieved. Long-Running Clusters, in contrast, are meant to host 
+applications indefinitely. 
+
+EMR makes use of the following services:  
+* EC2 - These will make up the individual nodes. 
+* VPC - Does the networking for the cluster. 
+* S3 - Stores your input/output data. 
+* IAM - for permissions
+* CloudWatch - For performance and alerting. 
+* CloudTrail - Request Auditing
+* Data Pipeline - Scheduling the cluster on/off for specific tasks. 
+
+There's a couple different storage options here. We can run HDFS, which stores
+the data directly on the cluster. However, as soon as you delete the cluster, 
+you'll lose that storage. But the tradeoff is speed, things will go much faster
+if the data is all available locally on the machines doing the processing, and 
+Hadoop has a lot of intelligent optimization that will make the query process
+the fastest. So that's the landscape. 
+
+EMRFS is something of a split-the-difference option instead. The data is stored
+on S3, but EMRFS gives a layer that makes it behave like HDFS. 
+
+Finally, Amazon does offer Elastic Block Store, which seems to be a custom
+storage offering specifically for Hadoop and EMR. 
+
+Pricing is per-hour for the EMR service, plus all the EC2 time used by the 
+cluster. I'm guessing that adds up fast. But you get automatic provisioning in
+failure, as well as all the benefits of clustered computing. 
+
+### Spark on EMR
 """
