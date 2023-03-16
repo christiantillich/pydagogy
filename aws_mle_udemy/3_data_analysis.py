@@ -173,4 +173,55 @@ cluster. I'm guessing that adds up fast. But you get automatic provisioning in
 failure, as well as all the benefits of clustered computing. 
 
 ### Spark on EMR
+
+Before we get to Spark, we need to think about Hadoop as three comoponents all
+sitting on top of each other - HDFS | YARN | MapReduce. HDFS is the file
+management system, YARN negotiates resources for the cluster, and MapReduce is
+the transformation element that's setting up chains of map-reduce to get the
+desired output. 
+
+This structure is important because Spark pushes out and replaces the MapReduce
+component, and is widely considered superior to MapReduce. Actual work is done
+in the "Spark Context" in the master node, which talks to the cluster manager
+(YARN, but there's also a spark component for non-hadoop clusters) to decide how
+to best divy up resources. 
+
+There's a couple other Spark components here - Streaming, SQL, MLLib, GraphX. 
+The SQL component is pretty robust, interacting with many common file types
+and even pushing out the Core dataframe components for its own dataframe object
+that many consider superior. It's also very similar to a Pandas dataframe in 
+terms of look and feel, but one that can distribute the data and specified 
+computations across the whole cluster. There's a streaming component as well, 
+which integrates well with Kafka and Kinesis and allows users to define how 
+to handle a batch, which then gets applied on Spark Streaming "mini-batches"
+for streamed analytics. The MLLib is the ML library, and is a collection of 
+model implementations designed to take advantage of the distributed computing
+power. And GraphX is similarly your network processing library - i.e. edges and
+nodes, not visualization. 
+
+With MLLib, it's important to note that Spark only really cares to implement 
+algorithms that can take advantage of the parallel processing in some way. So 
+the offerings are kindof weird. Some classification and regression, tree methods, 
+clustering, LDA, SVD/PCA, etc. I must confess I'll have to dig in on some of these
+to understand why they benefit from a parallel computation structure. 
+
+With spark streaming, imagine having a data table with no rows to start, and 
+where rows get appended over time. This is essentially how Spark treats data
+streams. With spark, you can define a structured stream using Kinesis as an 
+input, as a way to query out the results of the stream. 
+
+Spark itself has a notebook option called Zeppelin (is this a Hindenberg joke?). 
+It gives you a spark shell, a SQL executor, and some light visualization
+for building dashboards and analyses. 
+
+### EMR Notebooks
+
+AWS gives a counter-offering here to Zeppelin. Notebooks get backed up to S3, 
+you can provision cluster resources directly in the notebook, and it can be 
+accessed right from the AWS console. 
+
+
+
+
+
 """
