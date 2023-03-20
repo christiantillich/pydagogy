@@ -220,6 +220,82 @@ AWS gives a counter-offering here to Zeppelin. Notebooks get backed up to S3,
 you can provision cluster resources directly in the notebook, and it can be 
 accessed right from the AWS console. 
 
+### EMR Security
+
+Various options here for security. IAM policies and roles, Kerberos, SSH. 
+
+### Cluster Resource Provisioning. 
+
+Rule of thumb, m4.large if < 50 nodes, m4.xlarge if > 50 nodes. If your cluster
+does very little processing and mostly just makes calls to external resources
+(e.g. a web-crawler), you can go even lower. 
+
+Spot instances are available here, but it's generally a bad idea to use them
+as master or data-holding nodes, because spot instances can often become no-longer
+available. As task nodes, however, they do a great job, because they don't actually
+have to hold the data to perform the task, so if they're no longer available
+for some reason, you only lose a little bit of time redoing the task. 
+
+# Feature Engineering
+
+Feature engineering is the art of knowing what variables will be important so 
+that the model can tell you they're important. 
+
+### Imputation
+
+Mean replacement is your start, but it does inject some bias. Same with median
+imputation, which works better for skewed distributions. And you can do modal
+replacement for categorical stuff if needed. Still, there are more advanced
+ways to handle this. 
+
+Dropping records is your other go-to, but is only really viable if the total 
+number of records dropped is low relative to the total amount. 
+
+Hot-Deck imputation is usually the gold standard. And we can do it in a number
+of flavors. KNN is probably the most approachable - find some k-number of similar
+rows and impute with aggregates from that sample. The gold standard 
+of Regression-flavored approaches is MICE. And there are deep-learning approaches
+for hot-deck imputation, and that is a serious pro-move. 
+
+Of course, trying to improve data collection is also a good option. Throw out the
+bad stuff and try to get 100% coverage on more sample. 
+
+### Unbalanced Data
+
+You either under-sample or you over-sample, and you definitely need to lean 
+more on precision/recall than accuracy. 
+
+There is a new technique called SMOTE (Synthetic Minority Oversampling 
+Technique). It goes roughly as follows - take a sample of the minority class, 
+run KNN, and make a new record from the aggregates of the linked neighbors. This
+oversamples in a way where the added record is now distinct from any of the 
+records it was generated from. 
+
+### Outliers
+
+The first slides are just about variance and standard dev. And a lot of these
+slides gloss over the fact that we're assuming the data is normmally
+distributed, which is pretty critical to whether we consider the obs an outlier
+or not. 
+
+You can throw out outlier observations, in practice though I've found it better
+to cap values rather than toss them. Also, identifying outliers purely based on
+assuming a normal distribution and finding the stdev is...   naive. In practice
+that goes wrong way more than it goes right. 
+
+The teacher makes a hard jump here from using stdev to using Random Cut Forest
+as an outlier detection algo, which I think underscores my point further -
+outlier detection is actually really tricky, and assuming your data follows a
+normal distribution and using stdev works in only a couple rare cases.
+Generally, you need something more advanced. That said, I have no clue whether
+Random Cut forest actually does work, but AWS really wants you to consider it
+the best answer. 
+
+
+
+
+
+
 
 
 
