@@ -7,11 +7,11 @@ provide examples
 
 # Overview
 
-LLMs work best when given clear, simple, specific instructions. Large, complex
-paragraphs are prone to misinterpretation and can lead to suboptimal results.
-Prompt chaining is a pattern whereby the developer breaks down complex tasks
-into smaller, more manageable sub-tasks, each with its own prompt. When prompt
-chaining, the output of one prompt can be used as the input for the next prompt. 
+LLMs work best when given clear, simple, specific instructions. But often users
+want to submit complex requests that are contingent on multiple factors. One way
+to handle this complexity is to break down the request into smaller parts, each
+handled by a specialized agent or prompt chain. A routing agent can analyze the
+input and delegate sub-tasks to the appropriate specialized handlers. 
 
 # Diagram
 
@@ -49,6 +49,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableBranch
+
+from IPython.display import Image, display
 
 llm = ChatOpenAI(model="gpt-4", temperature=0)
 def booking_handler(request: str) -> str:
@@ -125,7 +127,6 @@ We can actually view the whole pipeline like this:
 coordinator_agent.get_graph().print_ascii()
 
 #%% [python]
-from IPython.display import Image, display
 display(Image(coordinator_agent.get_graph().draw_mermaid_png()))
 
 #%% [markdown]
